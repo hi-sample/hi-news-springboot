@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- monitorInterval：Log4j能够自动检测修改配置 文件和重新配置本身，设置间隔秒数 -->
+<!-- status="OFF"，可以去掉，它的含义为是否记录log4j2本身的event信息，默认是OFF -->
+<Configuration monitorInterval="5" status="OFF">
+    <!-- 日志级别以及优先级排序: OFF > FATAL > ERROR > WARN > INFO > DEBUG > TRACE > ALL -->
+
+    <!-- 变量配置 -->
+    <Properties>
+        <!-- 日志文件保存路径 -->
+        <property name="filePath">${spring:logging.file.path}</property>
+        <!-- 日志切割的最小单位: log文件大小达到该值时开始分割 -->
+        <property name="maxFileSize">${spring:logging.log4j2.max-file-size}</property>
+        <!--日志滚动压缩数量，默认为7，生产环境一定要注意配置该值，避免因该值过小导致日志被覆盖丢失-->
+        <property name="maxHistory">${spring:logging.log4j2.max-history}</property>
+        <!-- 日志文件输出级别 -->
+        <property name="logLevel">${spring:logging.log4j2.level}</property>
+        <!-- immediateFlush 默认为true, false表示使用缓存，不立即写入文本，需与异步日志配合使用提高性能-->
+        <property name="immediateFlush">${spring:logging.log4j2.immediateFlush}</property>
+        <!-- 日志输出格式 -->
+        <!--<property name="logPattern">%d %p %class{1.} [%t] %location %m %ex%n</property>-->
+        <property name="logPattern">%d{yyyy-MM-dd HH:mm:ss.SSS z} %-5level [%t] %C{1.}: %msg%xEx%n</property>
+        <!-- 控制台输出彩色格式，与logback风格一致 -->
+        <property name="consolePattern">%clr{%d{yyyy-MM-dd HH:mm:ss.SSS}}{faint} %clr{%5p} %clr{${sys:PID}}{magenta} %clr{---}{faint} %clr{[%15.15t]}{faint} %clr{%-40.40c{1.}}{cyan} %clr{:}{faint} %m%n%xwEx</property>
+    </Properties>
+
+
+    <!--先定义所有的appender -->
+    <Appenders>
+        <!--这个输出控制台的配置 -->
+        <Console name="Console" target="SYSTEM_OUT" immediateFlush="true">
+            <!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch） -->
+            <ThresholdFilter level="trace" onMatch="ACCEPT" onMismatch="DENY"/>
+            <!--输出日志的格式 -->
+            <PatternLayout pattern="${consolePattern}"/>
+        </Console>
+
+        <!-- debug级别日志文件 -->
+        <!--immediateFlush 默认为true, false表示使用缓存，不立即写入文本，需与异步日志配合使用提高性能-->
+        <RollingRandomAccessFile name="app_debug" fileName="${filePath}/debug/debug.log" immediateFlush="${immediateFlush}"
+                     filePattern="${filePath}/debug/debug-%d{yyyy-MM-dd}-%i.log.gz">
+            <!--日志滚动压缩数量，默认为7-->
+            <DefaultRolloverStrategy max="${maxHistory}"/>
+            <Filters>
+                <ThresholdFilter level="info" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="debug" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <PatternLayout charset="UTF-8" pattern="${logPattern}"/>
+            <Policies>
+                <!-- interval，integer型，指定两次封存动作之间的时间间隔。单位:以日志的命名精度来确定单位，比如yyyy-MM-dd-HH 单位为小时，yyyy-MM-dd-HH-mm 单位为分钟 -->
+                <TimeBasedTriggeringPolicy modulate="true" interval="1"/>
+                <SizeBasedTriggeringPolicy size="${maxFileSize}"/>
+            </Policies>
+        </RollingRandomAccessFile>
+
+        <!-- 记录info以上级别日志文件 -->
+        <RollingRandomAccessFile name="app_info" fileName="${filePath}/info/info.log" immediateFlush="${immediateFlush}"
+                     filePattern="${filePath}/info/info-%d{yyyy-MM-dd}-%i.log.gz">
+            <!--日志滚动压缩数量，默认为7-->
+            <DefaultRolloverStrategy max="${maxHistory}"/>
+            <Filters>
+                <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <PatternLayout charset="UTF-8" pattern="${logPattern}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy modulate="true" interval="1"/>
+                <SizeBasedTriggeringPolicy size="${maxFileSize}"/>
+            </Policies>
+        </RollingRandomAccessFile>
+
+        <!-- 记录warn以上级别日志文件 -->
+        <RollingRandomAccessFile name="app_error" fileName="${filePath}/error/error.log" immediateFlush="${immediateFlush}"
+                     filePattern="${filePath}/error/error-%d{yyyy-MM-dd}-%i.log.gz">
+            <!--日志滚动压缩数量，默认为7-->
+            <DefaultRolloverStrategy max="${maxHistory}"/>
+            <Filters>
+                <ThresholdFilter level="warn" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <PatternLayout charset="UTF-8" pattern="${logPattern}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy modulate="true" interval="1"/>
+                <SizeBasedTriggeringPolicy size="${maxFileSize}"/>
+            </Policies>
+        </RollingRandomAccessFile>
+
+    </Appenders>
+
+    <!--然后定义logger，只有定义了logger并引入的appender，appender才会生效 -->
+    <Loggers>
+        <Root level="${logLevel}" additivity="false" includeLocation="true">
+            <AppenderRef ref="Console" />
+            <AppenderRef ref="app_debug" />
+            <AppenderRef ref="app_info" />
+            <AppenderRef ref="app_error" />
+        </Root>
+    </Loggers>
+
+</Configuration>

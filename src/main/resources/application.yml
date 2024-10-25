@@ -1,0 +1,36 @@
+server:
+  #default port 8080
+  port: 8989
+
+spring:
+  application:
+    name: news-sample
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      stat-view-servlet:
+        # 打开监控界面 http://localhost:8989/druid/
+        enabled: true
+      driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      url: jdbc:sqlserver://test.s249.hifor.net;DatabaseName=demo_news;sendStringParametersAsUnicode=false;encrypt=false;trustServerCertificate=true
+      username: news
+      password: Ea!@jjX7Cp6WwhL5
+
+mybatis:
+  mapper-locations: classpath*:**/dao/mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+#日志配置
+logging:
+  file:
+    path: logs/${spring.application.name}
+  #自定义配置
+  log4j2:
+    level: info
+    max-file-size: 20M
+    #日志滚动压缩数量,默认为7个,超过数量的会自动丢弃时间最早的日志
+    max-history: 7
+    #immediateFlush 默认为true, false表示使用缓存，不立即写入文本，必须与异步日志配合使用提高性能
+    #若没开启异步日志，日志大小未达到缓存要求时停止应用，则日志丢失
+    immediateFlush: true
