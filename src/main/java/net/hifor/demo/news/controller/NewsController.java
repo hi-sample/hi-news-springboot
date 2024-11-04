@@ -13,7 +13,7 @@ import jakarta.annotation.Resource;
  * 说明： @CrossOrigin 用于支持跨域调用，生产环境一般不能使用，会有安全问题
  * 生产环境解决跨域调用会使用其他安全的方式来解决该问题
  */
-//@CrossOrigin
+//@CrossOrigin(methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PATCH, RequestMethod.DELETE, RequestMethod.OPTIONS})
 @RestController
 @RequestMapping("/news")
 public class NewsController {
